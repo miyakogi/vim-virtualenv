@@ -28,16 +28,14 @@ function! virtualenv#activate(name) "{{{1
         let $PATH = bin.':'.$PATH
     endif
 
-	call system('python' . script)
+    python << EOF
+import vim, os, sys
+prev_sys_path = list(sys.path)
+EOF
 
-"     python << EOF
-" import vim, os, sys
-" activate_this = vim.eval('l:script')
-" prev_sys_path = list(sys.path)
-" execfile(activate_this, dict(__file__=activate_this))
-" prev_pythonpath = os.environ.setdefault('PYTHONPATH', '')
-" os.environ['PYTHONPATH'] += ':' + os.getcwd() + ':' + ':'.join(sys.path)
-" EOF
+	let l:python_path = bin . 'python'
+	call system(l:python_path . ' ' . script)
+
     let g:virtualenv_name = name
 endfunction
 
