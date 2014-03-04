@@ -14,9 +14,10 @@ function! virtualenv#activate(name) "{{{1
     if len(name) == 0  "Couldn't figure it out, so DIE
         return
     endif
-    let bin = g:virtualenv_directory.'/'.name.'/bin'
-    let script = bin.'/activate_this.py'
-    if !filereadable(script)
+    let l:base = g:virtualenv_directory . '/' . name
+    let l:bin = l:base . '/bin'
+    let l:script = l:bin . '/activate_this.py'
+    if !filereadable(l:script)
         return 0
     endif
     call virtualenv#deactivate()
@@ -24,19 +25,49 @@ function! virtualenv#activate(name) "{{{1
 
     " Prepend bin to PATH, but only if it's not there already
     " (activate_this does this also, https://github.com/pypa/virtualenv/issues/14)
-    if $PATH[:len(bin)] != bin.':'
-        let $PATH = bin.':'.$PATH
+    if $PATH[:len(l:bin)] != l:bin.':'
+        let $PATH = l:bin.':'.$PATH
     endif
 
-    python << EOF
-import vim, os, sys
-prev_sys_path = list(sys.path)
-EOF
-
-	let l:python_path = bin . 'python'
-	call system(l:python_path . ' ' . script)
-
+	let l:python_path = l:bin . '/python'
+	let l:cmd = l:python_path . ' ' . script
+	call system(l:cmd)
     let g:virtualenv_name = name
+
+	" Re-implementation fo activate_this.py
+    python << EOF
+import vim
+import sys
+import os
+import shlex
+from subprocess import check_output
+
+prev_sys_path = list(sys.path)
+activate_this = vim.eval('l:script')
+
+old_os_path = os.environ['PATH']
+os.environ['PATH'] = os.path.dirname(os.path.abspath(activate_this)) + os.pathsep + old_os_path
+base = os.path.dirname(os.path.dirname(os.path.abspath(activate_this)))
+if sys.platform == 'win32':
+    site_packages = os.path.join(base, 'Lib', 'site-packages')
+else:
+    py_var_cmd = vim.eval('l:python_path') + ' -c ' + "\"import sys;print(sys.version[:3], end='')\""
+    py_var_cmd = shlex.split(py_var_cmd)
+    py_site_ver = check_output(py_var_cmd)
+    py_base = vim.eval('l:base')
+    site_packages = os.path.join(py_base, 'lib', 'python'+py_site_ver, 'site-packages')
+import site
+site.addsitedir(site_packages)
+sys.real_prefix = sys.prefix
+sys.prefix = base
+# Move the added items to the front of the path:
+new_sys_path = []
+for item in list(sys.path):
+    if item not in prev_sys_path:
+        new_sys_path.append(item)
+        sys.path.remove(item)
+sys.path[:0] = new_sys_path
+EOF
 endfunction
 
 function! virtualenv#deactivate() "{{{1
@@ -45,8 +76,8 @@ import vim, sys
 try:
     sys.path[:] = prev_sys_path
     del(prev_sys_path)
-    os.environ['PYTHONPATH'] = prev_pythonpath
-    del(prev_pythonpath)
+    # os.environ['PYTHONPATH'] = prev_pythonpath
+    # del(prev_pythonpath)
 except:
     pass
 EOF
