@@ -29,12 +29,12 @@ function! virtualenv#activate(name) "{{{1
         let $PATH = l:bin.':'.$PATH
     endif
 
-	let l:python_path = l:bin . '/python'
-	let l:cmd = l:python_path . ' ' . script
-	call system(l:cmd)
+    let l:python_path = l:bin . '/python'
+    let l:cmd = l:python_path . ' ' . script
+    call system(l:cmd)
     let g:virtualenv_name = name
 
-	" Re-implementation fo activate_this.py
+    " Re-implementation fo activate_this.py
     python << EOF
 import vim
 import sys
