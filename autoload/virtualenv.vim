@@ -16,7 +16,7 @@ function! virtualenv#activate(name) "{{{1
     endif
     let l:base = g:virtualenv_directory . '/' . name
     let l:bin = l:base . '/bin'
-    let l:script = l:bin . '/activate_this.py'
+    let l:script = l:bin . '/activate'
     if !filereadable(l:script)
         return 0
     endif
@@ -41,11 +41,11 @@ import shlex
 from subprocess import check_output
 
 prev_sys_path = list(sys.path)
-activate_this = vim.eval('l:script')
+activate = vim.eval('l:script')
 
 old_os_path = os.environ['PATH']
-os.environ['PATH'] = os.path.dirname(os.path.abspath(activate_this)) + os.pathsep + old_os_path
-base = os.path.dirname(os.path.dirname(os.path.abspath(activate_this)))
+os.environ['PATH'] = os.path.dirname(os.path.abspath(activate)) + os.pathsep + old_os_path
+base = os.path.dirname(os.path.dirname(os.path.abspath(activate)))
 if sys.platform == 'win32':
     site_packages = os.path.join(base, 'Lib', 'site-packages')
 else:
@@ -107,7 +107,7 @@ function! virtualenv#names(prefix) "{{{1
         if !isdirectory(dir)
             continue
         endif
-        let fn = dir.'/bin/activate_this.py'
+        let fn = dir.'/bin/activate'
         if !filereadable(fn)
             continue
         endif
