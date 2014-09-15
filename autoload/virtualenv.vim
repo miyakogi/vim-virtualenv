@@ -32,7 +32,7 @@ function! virtualenv#activate(name) "{{{1
     let l:python_path = l:bin . '/python'
     let g:virtualenv_name = name
 
-    " Re-implementation fo activate_this.py
+    " Re-implementation of activate_this.py
     python << EOF
 import vim
 import sys
