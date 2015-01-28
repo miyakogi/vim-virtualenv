@@ -30,6 +30,8 @@ function! virtualenv#activate(name) "{{{1
     endif
 
     let l:python_path = l:bin . '/python'
+    let l:python_ver = system(l:python_path . ' -V')[7:9]
+    let l:python_ver_major = l:python_ver[0]
     let g:virtualenv_name = name
 
     " Re-implementation fo activate_this.py
@@ -49,10 +51,7 @@ base = os.path.dirname(os.path.dirname(os.path.abspath(activate_this)))
 if sys.platform == 'win32':
     site_packages = os.path.join(base, 'Lib', 'site-packages')
 else:
-    py_var_cmd = vim.eval('l:python_path') + ' -c ' + "\"import sys;print(sys.version[:3], end='')\""
-    py_var_cmd = shlex.split(py_var_cmd)
-    py_site_ver = check_output(py_var_cmd)
-    vim.command('let l:python_ver_major=" . ' + py_site_ver[0] + '"')
+    py_site_ver = vim.eval('l:python_ver')
     py_base = vim.eval('l:base')
     site_packages = os.path.join(py_base, 'lib', 'python'+py_site_ver, 'site-packages')
 import site
